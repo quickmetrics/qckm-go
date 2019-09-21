@@ -16,7 +16,7 @@ Initialize with your API key before sending events. You'll only have to do this 
 ```
 package main
 
-import "github.com/quicmetrics/go"
+import "github.com/quickmetrics/go"
 
 func init() {
   qm.Init("YOUR_API_KEY")
