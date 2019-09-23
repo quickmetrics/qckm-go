@@ -14,6 +14,7 @@ const (
 )
 
 var clientKey *string
+var isEnabled bool
 
 type event struct {
 	Name      string  `json:"name"`
@@ -23,6 +24,11 @@ type event struct {
 
 func Init(apiKey string) {
 	clientKey = &apiKey
+	isEnabled = true
+}
+
+func SetEnabled(enable bool) {
+	isEnabled = enable
 }
 
 // Event sends a metric with values
@@ -68,6 +74,10 @@ func TimeDimension(start time.Time, name string, dimension string) {
 }
 
 func sendEvent(e event) {
+	if !isEnabled {
+		return
+	}
+
 	if clientKey == nil || *clientKey == "" {
 		log.Println("missing api key, please run qm.Init() first")
 		return

@@ -10,7 +10,16 @@ func TestInit(t *testing.T) {
 }
 
 func TestEvent(t *testing.T) {
-	Event("testing.go.event.2", 12)
+	Event("testing.go.event.2", 42)
+}
+
+func TestEnable(t *testing.T) {
+	// we disable event sending
+	SetEnabled(false)
+	// the api key is not inizalized
+	// but that shouldn't matter since
+	// the sending is disabled
+	Event("testing.go", 42)
 }
 
 func TestEventDimension(t *testing.T) {
