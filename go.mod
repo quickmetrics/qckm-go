@@ -1,4 +1,4 @@
-module github.com/quickmetrics/go
+module github.com/quickmetrics/qckm-go
 
 go 1.13
 
