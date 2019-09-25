@@ -11,20 +11,50 @@ import (
 const (
 	authHeader = "x-qm-key"
 	endpoint   = "https://qckm.io/json"
+	// batchEndpoint = "https://qckm.io/list"
+	batchEndpoint = "http://localhost:8000/list"
 )
 
 var clientKey *string
 var isEnabled bool
+var isVerbose bool
 
-type event struct {
-	Name      string  `json:"name"`
-	Value     float32 `json:"value"`
-	Dimension string  `json:"dimension,omitempty"`
+// initialization options
+type Options struct {
+	ApiKey       string
+	MaxBatchSize int
+	MaxBatchWait time.Duration
+	BatchWorkers int
+	Verbose      bool
 }
 
-func Init(apiKey string) {
-	clientKey = &apiKey
+// event holds a single event
+// ready to be sent to the qckm server
+type event struct {
+	Name      string
+	Value     float32
+	Timestamp time.Time
+	Dimension string
+}
+
+// list holds a slice of listItems which can
+// contain multiple events for batching
+type list []listItem
+
+type listItem struct {
+	Name      string          `json:"name"`
+	Dimension string          `json:"dimension,omitempty"`
+	Values    [][]interface{} `json:"values"`
+}
+
+var batcher *batch
+
+func Init(opt Options) {
+	clientKey = &opt.ApiKey
 	isEnabled = true
+	isVerbose = opt.Verbose
+
+	batcher = newBatcher(opt.MaxBatchSize, opt.MaxBatchWait, opt.BatchWorkers)
 }
 
 func SetEnabled(enable bool) {
@@ -33,19 +63,25 @@ func SetEnabled(enable bool) {
 
 // Event sends a metric with values
 func Event(name string, value float32) {
-	go sendEvent(event{
-		Name:  name,
-		Value: value,
-	})
+	if isEnabled {
+		batcher.add(event{
+			Name:      name,
+			Value:     value,
+			Timestamp: time.Now().UTC(),
+		})
+	}
 }
 
 // EventDimensions sends a name, secondary dimension and value
 func EventDimension(name string, dimension string, value float32) {
-	go sendEvent(event{
-		Name:      name,
-		Dimension: dimension,
-		Value:     value,
-	})
+	if isEnabled {
+		batcher.add(event{
+			Name:      name,
+			Dimension: dimension,
+			Value:     value,
+			Timestamp: time.Now().UTC(),
+		})
+	}
 }
 
 // Time is a helper to time functions
@@ -54,39 +90,83 @@ func EventDimension(name string, dimension string, value float32) {
 // and defer it at the start of your function like so:
 // defer qm.Time(time.Now(), "your.metric")
 func Time(start time.Time, name string) {
-	dur := float32(time.Since(start).Milliseconds())
-	go sendEvent(event{
-		Name:  name,
-		Value: dur,
-	})
+	if isEnabled {
+		dur := float32(time.Since(start).Milliseconds())
+		batcher.add(event{
+			Name:      name,
+			Value:     dur,
+			Timestamp: time.Now().UTC(),
+		})
+	}
 }
 
 // TimeDimension is a helper to time functions
 // pass it the star time and it'll calculate the
 // duration. It also supports a secondary dimension
 func TimeDimension(start time.Time, name string, dimension string) {
-	dur := float32(time.Since(start).Milliseconds())
-	go sendEvent(event{
-		Name:      name,
-		Dimension: dimension,
-		Value:     dur,
-	})
+	if isEnabled {
+		dur := float32(time.Since(start).Milliseconds())
+		batcher.add(event{
+			Name:      name,
+			Dimension: dimension,
+			Value:     dur,
+			Timestamp: time.Now().UTC(),
+		})
+	}
 }
 
-func sendEvent(e event) {
-	if !isEnabled {
-		return
+// FlushEvents processes any events left in the queue
+// and sends them to the qickmetrics server.
+func FlushEvents() {
+	batcher.flush()
+}
+
+func processBatch(ee []event) {
+	start := time.Now()
+
+	holder := map[string]map[string][][]interface{}{}
+
+	// we sort the events into a map of metric name and dimension
+	for _, e := range ee {
+		if holder[e.Name] == nil {
+			holder[e.Name] = map[string][][]interface{}{}
+		}
+		if holder[e.Name][e.Dimension] == nil {
+			holder[e.Name][e.Dimension] = [][]interface{}{}
+		}
+		holder[e.Name][e.Dimension] = append(holder[e.Name][e.Dimension], []interface{}{e.Timestamp.Unix(), e.Value})
 	}
 
+	output := list{}
+
+	// then we process them into an array of data items
+	for metricName, dimension := range holder {
+		for dimensionName, values := range dimension {
+			output = append(output, listItem{
+				Name:      metricName,
+				Dimension: dimensionName,
+				Values:    values,
+			})
+		}
+	}
+
+	if isVerbose {
+		log.Printf("qckm-go: processed %v events in %v", len(ee), time.Since(start))
+	}
+
+	go sendBatch(output)
+}
+
+func sendBatch(l list) {
 	if clientKey == nil || *clientKey == "" {
 		log.Println("missing api key, please run qm.Init() first")
 		return
 	}
 
-	body, _ := json.Marshal(e)
+	body, _ := json.Marshal(l)
 
 	req := fasthttp.AcquireRequest()
-	req.SetRequestURI(endpoint)
+	req.SetRequestURI(batchEndpoint)
 	req.Header.SetMethod("POST")
 	req.Header.SetContentType("application/json")
 	req.Header.Set(authHeader, *clientKey)
@@ -97,7 +177,8 @@ func sendEvent(e event) {
 
 	client := &fasthttp.Client{
 		ReadTimeout:  time.Second,
-		WriteTimeout: 10 * time.Second,
+		WriteTimeout: 15 * time.Second,
 	}
+
 	client.Do(req, resp)
 }

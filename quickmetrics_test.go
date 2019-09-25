@@ -6,7 +6,10 @@ import (
 )
 
 func TestInit(t *testing.T) {
-	Init("testkey")
+	Init(Options{
+		ApiKey:  "testkey",
+		Verbose: true,
+	})
 }
 
 func TestEvent(t *testing.T) {

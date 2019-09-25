@@ -1,32 +1,47 @@
 ## A quickmetrics client for go
 #### Installation
-`go get github.com/quickmetrics/go`
+`go get github.com/quickmetrics/qckm-go`
+
+#### Full Example
+```
+package main
+
+import "github.com/quickmetrics/qckm-go"
+
+func init() {
+  qm.Init({
+    ApiKey: "YOUR_API_KEY"
+  })
+}
+
+func main() {
+  qm.Event("hello.world", 1)
+}
+```
 
 #### Setup
 Initialize with your API key before sending events. You'll only have to do this once in your app lifecycle.
-`qm.Init("YOUR_API_KEY")`
+```
+  qm.Init(qm.Options{
+    ApiKey:       "YOUR_API_KEY",
+    MaxBatchSize: 500,
+    MaxBatchWait: 5,
+    BatchWorkers: 1,
+    Verbose:      true,
+  })
+```
 
 
 #### Send events
 
 `qm.Event("your.event", 123.456)`
 
+`qm.EventDimension("click.color", "blue", 1)`
 
-#### Full Example
-```
-package main
+`qm.Time(startTime, "response.time")`
 
-import "github.com/quickmetrics/go"
+`qm.TimeDimension(startTime, "response.time", "POST /login")`
 
-func init() {
-  qm.Init("YOUR_API_KEY")
-}
-
-func main() {
-  qm.Event("hello.world", 1)
-}
-
-```
 And that's it!
 
 For more info on naming conventions and examples check out our docs at https://app.quickmetrics.io/docs
