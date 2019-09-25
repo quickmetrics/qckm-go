@@ -9,10 +9,9 @@ import (
 )
 
 const (
-	authHeader = "x-qm-key"
-	endpoint   = "https://qckm.io/json"
-	// batchEndpoint = "https://qckm.io/list"
-	batchEndpoint = "http://localhost:8000/list"
+	authHeader    = "x-qm-key"
+	endpoint      = "https://qckm.io/json"
+	batchEndpoint = "https://qckm.io/list"
 )
 
 var clientKey *string
