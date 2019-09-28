@@ -36,7 +36,7 @@ func cleanSettings(maxSize int, maxWait time.Duration, workerSize int) (int, tim
 	if maxSize < 10 {
 		maxSize = 10
 	} else if maxSize > 10000 {
-		maxSize = 1000
+		maxSize = 10000
 	}
 
 	if maxWait < 1 {
