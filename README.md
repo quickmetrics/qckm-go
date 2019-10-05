@@ -1,3 +1,4 @@
+[![GoDoc](https://godoc.org/github.com/quickmetrics/qckm-go?status.svg)](https://godoc.org/github.com/quickmetrics/qckm-go)
 ## A quickmetrics client for go
 #### Installation
 `go get github.com/quickmetrics/qckm-go`
