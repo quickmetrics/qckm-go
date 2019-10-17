@@ -10,7 +10,7 @@ package main
 import "github.com/quickmetrics/qckm-go"
 
 func init() {
-  qm.Init({
+  qm.Init(qm.Options{
     ApiKey: "YOUR_API_KEY"
   })
 }
