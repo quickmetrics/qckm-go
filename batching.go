@@ -55,7 +55,7 @@ func cleanSettings(maxSize int, maxWait time.Duration, workerSize int) (int, tim
 	}
 
 	if isVerbose {
-		log.Printf("init batcher with maxSize: %v, maxWait: %v, workers: %v", maxSize, maxWait, workerSize)
+		log.Printf("[INFO] qckm-go: init batcher with maxSize: %v, maxWait: %v, workers: %v", maxSize, maxWait, workerSize)
 	}
 
 	return maxSize, maxWait, workerSize
