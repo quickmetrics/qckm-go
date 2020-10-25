@@ -23,9 +23,11 @@ func TestFlush(t *testing.T) {
 	Event("testing.go.flush", 42)
 	Event("testing.go.flush", 42)
 	Event("testing.go.flush", 42)
+	FlushEventsSync()
 	Event("testing.go.flush", 42)
 	Event("testing.go.flush", 42)
 
+	FlushEventsSync()
 	FlushEventsSync()
 }
 

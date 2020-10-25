@@ -1,12 +1,13 @@
 package qm
 
 import (
+	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"sync"
 	"time"
-
-	"github.com/valyala/fasthttp"
 )
 
 const (
@@ -49,12 +50,22 @@ type listItem struct {
 
 var batcher *batch
 
+var httpClient *http.Client
+
 func Init(opt Options) {
 	clientKey = &opt.ApiKey
 	isEnabled = true
 	isVerbose = opt.Verbose
 
 	batcher = newBatcher(opt.MaxBatchSize, opt.MaxBatchWait, opt.BatchWorkers)
+
+	httpClient = &http.Client{
+		Timeout: 6 * time.Second,
+		Transport: &http.Transport{
+			MaxIdleConns:    1,
+			MaxConnsPerHost: 3,
+			IdleConnTimeout: 60 * time.Second,
+		}}
 }
 
 func SetEnabled(enable bool) {
@@ -175,41 +186,41 @@ func processBatch(ee []event, wg *sync.WaitGroup) {
 
 func sendBatch(l list) {
 	if clientKey == nil || *clientKey == "" {
-		log.Println("[ERROR] missing api key, please run qm.Init() first")
+		log.Println("[ERROR] qckm-go: missing api key, please run qm.Init() first")
 		return
 	}
 
-	body, _ := json.Marshal(l)
+	buf := new(bytes.Buffer)
+	json.NewEncoder(buf).Encode(l)
 
-	req := fasthttp.AcquireRequest()
-	req.SetRequestURI(batchEndpoint)
-	req.Header.SetMethod("POST")
-	req.Header.SetContentType("application/json")
-	req.Header.Set(authHeader, *clientKey)
-	req.SetBody(body)
+	req, err := http.NewRequest("POST", batchEndpoint, buf)
+	if err != nil {
+		if isVerbose {
+			log.Println("[ERROR] qckm-go: unable to create http request")
+		}
 
-	resp := fasthttp.AcquireResponse()
-	resp.SkipBody = !isVerbose
-
-	client := &fasthttp.Client{
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  time.Second,
+		return
 	}
+
+	req.Header.Set("content-type", "application/json")
+	req.Header.Set(authHeader, *clientKey)
 
 	start := time.Now()
 
-	client.Do(req, resp)
+	resp, err := httpClient.Do(req)
 
 	if isVerbose {
 		if resp != nil {
+			body, _ := ioutil.ReadAll(resp.Body)
 			log.Printf(
-				`[INFO] Request Finished in %vms. endpoint: "%v" status: %v addr: %v body: "%v"`,
+				`[INFO] Request Finished in %vms. endpoint: "%v" status: %v body: "%v"`,
 				time.Since(start).Milliseconds(),
-				req.URI(),
-				resp.StatusCode(),
-				resp.RemoteAddr(),
-				string(resp.Body()),
+				req.URL,
+				resp.Status,
+				string(body),
 			)
+		} else {
+			log.Println("[ERROR] qckm-go: ", err.Error())
 		}
 	}
 }
