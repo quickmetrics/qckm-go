@@ -11,8 +11,8 @@ import (
 
 const (
 	authHeader    = "x-qm-key"
-	endpoint      = "https://qckm.io/json"
-	batchEndpoint = "https://qckm.io/list"
+	endpoint      = "https://in.qckm.io/json"
+	batchEndpoint = "https://in.qckm.io/list"
 )
 
 var clientKey *string
