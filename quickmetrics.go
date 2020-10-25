@@ -189,7 +189,7 @@ func sendBatch(l list) {
 	req.SetBody(body)
 
 	resp := fasthttp.AcquireResponse()
-	resp.SkipBody = true
+	resp.SkipBody = !isVerbose
 
 	client := &fasthttp.Client{
 		WriteTimeout: 15 * time.Second,
@@ -203,10 +203,12 @@ func sendBatch(l list) {
 	if isVerbose {
 		if resp != nil {
 			log.Printf(
-				"[INFO] Events received by %v (status %v\n) in %vms",
-				batchEndpoint,
-				resp.StatusCode(),
+				`[INFO] Request Finished in %vms. endpoint: "%v" status: %v addr: %v body: "%v"`,
 				time.Since(start).Milliseconds(),
+				req.URI(),
+				resp.StatusCode(),
+				resp.RemoteAddr(),
+				string(resp.Body()),
 			)
 		}
 	}
