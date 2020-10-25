@@ -12,6 +12,23 @@ func TestInit(t *testing.T) {
 	})
 }
 
+func TestFlush(t *testing.T) {
+	Init(Options{
+		ApiKey:       "testkey",
+		Verbose:      true,
+		MaxBatchSize: 10000,
+		MaxBatchWait: 60,
+	})
+
+	Event("testing.go.flush", 42)
+	Event("testing.go.flush", 42)
+	Event("testing.go.flush", 42)
+	Event("testing.go.flush", 42)
+	Event("testing.go.flush", 42)
+
+	FlushEvents()
+}
+
 func TestEvent(t *testing.T) {
 	Event("testing.go.event.2", 42)
 }

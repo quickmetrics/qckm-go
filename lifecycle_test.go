@@ -7,15 +7,13 @@ import (
 
 func TestLifecycle(t *testing.T) {
 	Init(Options{
-		ApiKey:       "testkey",
+		ApiKey:       "WPMh18_JTOY-oDCk0LyFf2Hm1a-i8cYyxoBDzUMt1Lv",
 		Verbose:      true,
 		MaxBatchWait: 20,
 	})
 
-	Event("event", 42)
-	Event("event", 41)
-	EventDimension("event", "dim", 43)
-	EventDimension("event", "dim", 44)
+	Event("api.request.time", 42)
+	Event("api.request.time", 41)
 	FlushEvents()
 
 	// // wait

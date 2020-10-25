@@ -3,6 +3,7 @@ package qm
 import (
 	"encoding/json"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/valyala/fasthttp"
@@ -120,7 +121,18 @@ func FlushEvents() {
 	batcher.flush()
 }
 
-func processBatch(ee []event) {
+// FlushEventsSync processes any events left in the queue
+// and sends them to the qickmetrics server. This function
+// is blocking until events are sent to ensure that the system
+// doesn't shut down before then
+func FlushEventsSync() {
+	// flush any pending items to process them
+	batcher.flush()
+	// wait for all processing and network to finish
+	batcher.wait()
+}
+
+func processBatch(ee []event, wg *sync.WaitGroup) {
 	start := time.Now()
 
 	holder := map[string]map[string][][]interface{}{}
@@ -150,15 +162,20 @@ func processBatch(ee []event) {
 	}
 
 	if isVerbose {
-		log.Printf("qckm-go: processed %v events in %v", len(ee), time.Since(start))
+		log.Printf("[INFO] qckm-go: processed %v events in %v", len(ee), time.Since(start))
 	}
 
-	go sendBatch(output)
+	sendBatch(output)
+
+	// let waitgroup know we're done with these events
+	for i := 0; i < len(ee); i++ {
+		wg.Done()
+	}
 }
 
 func sendBatch(l list) {
 	if clientKey == nil || *clientKey == "" {
-		log.Println("missing api key, please run qm.Init() first")
+		log.Println("[ERROR] missing api key, please run qm.Init() first")
 		return
 	}
 
@@ -175,9 +192,22 @@ func sendBatch(l list) {
 	resp.SkipBody = true
 
 	client := &fasthttp.Client{
-		ReadTimeout:  time.Second,
 		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  time.Second,
 	}
 
+	start := time.Now()
+
 	client.Do(req, resp)
+
+	if isVerbose {
+		if resp != nil {
+			log.Printf(
+				"[INFO] Events received by %v (status %v\n) in %vms",
+				batchEndpoint,
+				resp.StatusCode(),
+				time.Since(start).Milliseconds(),
+			)
+		}
+	}
 }

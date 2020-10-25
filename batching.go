@@ -13,6 +13,7 @@ type batch struct {
 	maxWait   time.Duration
 	items     []event
 	flushChan chan []event
+	wg        *sync.WaitGroup
 }
 
 // initialize batcher
@@ -26,6 +27,7 @@ func newBatcher(maxSize int, maxWait time.Duration, workerSize int) *batch {
 		items:     make([]event, 0),
 		mutex:     &sync.RWMutex{},
 		flushChan: make(chan []event, workers),
+		wg:        &sync.WaitGroup{},
 	}
 	instance.setFlushWorker(workers)
 	go instance.runFlushByTime()
@@ -60,7 +62,7 @@ func cleanSettings(maxSize int, maxWait time.Duration, workerSize int) (int, tim
 }
 
 func (b *batch) process(ee []event) {
-	processBatch(ee)
+	processBatch(ee, b.wg)
 }
 
 func (b *batch) setFlushWorker(workerSize int) {
@@ -80,6 +82,9 @@ func (b *batch) add(data event) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 	b.items = append(b.items, data)
+
+	b.wg.Add(1)
+
 	if len(b.items) >= b.maxSize {
 		b.flush()
 	}
@@ -94,6 +99,10 @@ func (b *batch) runFlushByTime() {
 			b.mutex.Unlock()
 		}
 	}
+}
+
+func (b *batch) wait() {
+	b.wg.Wait()
 }
 
 func (b *batch) flush() {
