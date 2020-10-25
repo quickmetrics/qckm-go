@@ -1,3 +1,4 @@
+[![GoDoc](https://godoc.org/github.com/quickmetrics/qckm-go?status.svg)](https://godoc.org/github.com/quickmetrics/qckm-go)
 ## A quickmetrics client for go
 #### Installation
 `go get github.com/quickmetrics/qckm-go`
@@ -9,7 +10,7 @@ package main
 import "github.com/quickmetrics/qckm-go"
 
 func init() {
-  qm.Init({
+  qm.Init(qm.Options{
     ApiKey: "YOUR_API_KEY"
   })
 }
