@@ -2,7 +2,6 @@ package qm
 
 import (
 	"testing"
-	"time"
 )
 
 func TestInit(t *testing.T) {
@@ -20,19 +19,21 @@ func TestFlush(t *testing.T) {
 		MaxBatchWait: 60,
 	})
 
-	Event("testing.go.flush", 42)
-	Event("testing.go.flush", 42)
-	Event("testing.go.flush", 42)
+	Event("testEvent", Fields{"string": "lalala", "number": 123, "bool": true})
+	Event("testEvent", Fields{"string": "lalala", "number": 123, "bool": true})
+	Event("testEvent", Fields{"string": "lalala", "number": 123, "bool": true})
+	Event("testEvent", Fields{"string": "lalala", "number": 123, "bool": true})
 	FlushEventsSync()
-	Event("testing.go.flush", 42)
-	Event("testing.go.flush", 42)
+	Event("testEvent", Fields{"string": "lalala", "number": 123, "bool": true})
+	Event("testEvent", Fields{"string": "lalala", "number": 123, "bool": true})
+	Event("testEvent", Fields{"string": "lalala", "number": 123, "bool": true})
 
 	FlushEventsSync()
 	FlushEventsSync()
 }
 
 func TestEvent(t *testing.T) {
-	Event("testing.go.event.2", 42)
+	Event("testEvent", Fields{"string": "lalala", "number": 123, "bool": true})
 }
 
 func TestEnable(t *testing.T) {
@@ -41,17 +42,5 @@ func TestEnable(t *testing.T) {
 	// the api key is not inizalized
 	// but that shouldn't matter since
 	// the sending is disabled
-	Event("testing.go", 42)
-}
-
-func TestEventDimension(t *testing.T) {
-	EventDimension("testing.go.event", "test.dimension", 12)
-}
-
-func TestTime(t *testing.T) {
-	Time(time.Now(), "testing.go.time")
-}
-
-func TestTimeDimension(t *testing.T) {
-	TimeDimension(time.Now(), "testing.go.time", "test.dimension")
+	Event("testEvent", Fields{"string": "lalala", "number": 123, "bool": true})
 }

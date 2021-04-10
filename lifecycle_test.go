@@ -11,8 +11,8 @@ func TestLifecycle(t *testing.T) {
 		MaxBatchWait: 20,
 	})
 
-	Event("api.request.time", 42)
-	Event("api.request.time", 41)
+	Event("testEvent", Fields{"string": "lalala", "number": 123, "bool": true})
+	Event("testEvent", Fields{"string": "lalala", "number": 123, "bool": true})
 	FlushEventsSync()
 
 }
@@ -26,6 +26,6 @@ func BenchmarkBatching(b *testing.B) {
 	})
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		Event("test.benchmark", 123)
+		Event("testEvent", Fields{"string": "lalala", "number": 123, "bool": true})
 	}
 }
