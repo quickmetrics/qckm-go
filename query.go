@@ -91,7 +91,7 @@ func Query(data []QueryRequest) ([]Result, error) {
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
-	err = httpClient.Do(req, resp)
+	err = httpQueryClient.Do(req, resp)
 	if err != nil {
 		return []Result{}, err
 	}

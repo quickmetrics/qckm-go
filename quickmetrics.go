@@ -40,6 +40,7 @@ type Fields map[string]interface{}
 var batcher *batch
 
 var httpClient *fasthttp.Client
+var httpQueryClient *fasthttp.Client
 
 func Init(opt Options) {
 	clientKey = &opt.ApiKey
@@ -53,6 +54,13 @@ func Init(opt Options) {
 		MaxConnWaitTimeout: 15 * time.Second,
 		WriteTimeout:       15 * time.Second,
 		ReadTimeout:        time.Second,
+	}
+
+	httpQueryClient = &fasthttp.Client{
+		Name:               "go-qckm",
+		MaxConnWaitTimeout: 15 * time.Second,
+		WriteTimeout:       15 * time.Second,
+		ReadTimeout:        5 * time.Minute,
 	}
 }
 
