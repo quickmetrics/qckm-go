@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	authHeader = "x-qm-key"
-	endpoint   = "https://in.qckm.io/v2/events"
+	authHeader     = "x-qm-key"
+	ingestEndpoint = "https://in.qckm.io/v2/events"
+	queryEndpoint  = "https://api.quickmetrics.io/v2/query"
 )
 
 var clientKey *string
@@ -104,13 +105,16 @@ func sendBatch(ee []event) {
 	body, _ := json.Marshal(ee)
 
 	req := fasthttp.AcquireRequest()
-	req.SetRequestURI(endpoint)
+	defer fasthttp.ReleaseRequest(req)
+	req.SetRequestURI(ingestEndpoint)
 	req.Header.SetMethod("POST")
 	req.Header.SetContentType("application/json")
 	req.Header.Set(authHeader, *clientKey)
 	req.SetBody(body)
 
 	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(resp)
+
 	resp.SkipBody = !isVerbose
 
 	start := time.Now()
