@@ -18,12 +18,13 @@ func TestQuery(t *testing.T) {
 			To:   time.Now(),
 			Items: []Item{
 				{
-					Type:        TypeNumber,
+					Type:        TypeTimeseries,
 					Aggregation: AggCount,
+					Interval:    "24h",
 				},
 			},
 		},
 	})
 
-	log.Println(err, res[0].Stats, res[0].Results[0])
+	log.Println(err, res)
 }

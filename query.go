@@ -41,13 +41,13 @@ const (
 
 // Item within query
 type Item struct {
-	Key         string        `json:"key,omitempty"`             // the index of the column in the data
-	Type        ItemType      `json:"type"`                      // list, number, timeseries
-	Aggregation Agg           `json:"aggregation"`               // avg, sum, sum_cumulative, count, count_unique, min, max
-	Interval    time.Duration `json:"interval,omitempty"`        // (type=timeseries) 5m, 4h
-	ListOrder   string        `json:"listOrder,omitempty"`       // (type=list) asc, desc
-	ListLimit   int           `json:"listLimit,omitempty"`       // amount of items to be returned in list
-	ExcludeNull bool          `json:"listExcludeNull,omitempty"` // whether or not to count null values
+	Key         string   `json:"key,omitempty"`             // the index of the column in the data
+	Type        ItemType `json:"type"`                      // list, number, timeseries
+	Aggregation Agg      `json:"aggregation"`               // avg, sum, sum_cumulative, count, count_unique, min, max
+	Interval    string   `json:"interval,omitempty"`        // (type=timeseries) 5m, 4h
+	ListOrder   string   `json:"listOrder,omitempty"`       // (type=list) asc, desc
+	ListLimit   int      `json:"listLimit,omitempty"`       // amount of items to be returned in list
+	ExcludeNull bool     `json:"listExcludeNull,omitempty"` // whether or not to count null values
 }
 
 type Condition struct {
